@@ -9,6 +9,8 @@ class CustomFadeTransition extends MusicBeatSubstate {
 	var transBlack:FlxSprite;
 	var transGradient:FlxSprite;
 
+	public static var nextCamera:FlxCamera;
+
 	var stickers:Array<Dynamic> = [];
 
 	var duration:Float;

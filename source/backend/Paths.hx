@@ -279,6 +279,7 @@ class Paths
 				return true;
 		}
 		#end
+		trace(getPath(key, type, parentFolder, false));
 		return (OpenFlAssets.exists(getPath(key, type, parentFolder, false)));
 	}
 

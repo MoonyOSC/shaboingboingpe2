@@ -19,6 +19,8 @@ import openfl.utils.Assets as OpenFlAssets;
 import openfl.events.KeyboardEvent;
 import haxe.Json;
 import debug.FPSCounter;
+import openfl.utils.AssetType;
+import openfl.utils.Assets as OpenFlAssets;
 
 import cutscenes.DialogueBoxPsych;
 
@@ -39,6 +41,9 @@ import objects.Note.EventNote;
 import objects.*;
 import states.stages.*;
 import states.stages.objects.*;
+
+import objects.Waveform;
+import lime.media.AudioBuffer;
 
 #if LUA_ALLOWED
 import psychlua.*;
@@ -74,6 +79,10 @@ import crowplexus.iris.Iris;
  * "function eventEarlyTrigger" - Used for making your event start a few MILLISECONDS earlier
  * "function triggerEvent" - Called when the song hits your event's timestamp, this is probably what you were looking for
 **/
+
+@:access(flixel.system.FlxSound._sound)
+@:access(openfl.media.Sound.__buffer)
+
 class PlayState extends MusicBeatState
 {
 	public static var STRUM_X = 42;
@@ -109,6 +118,8 @@ class PlayState extends MusicBeatState
 	public var DAD_Y:Float = 100;
 	public var GF_X:Float = 400;
 	public var GF_Y:Float = 130;
+
+	public var waveformSprite:Waveform;
 
 	public var songSpeedTween:FlxTween;
 	public var songSpeed(default, set):Float = 1;
@@ -151,6 +162,9 @@ class PlayState extends MusicBeatState
 	public static var storyDifficulty:Int = 1;
 
 	public var spawnTime:Float = 2000;
+
+	public var ignoreOpponentStrumAnimations:Bool = false;
+	public var ignoreBFStrumAnimations:Bool = false;
 
 	public var inst:FlxSound;
 	public var vocals:FlxSound;
@@ -498,6 +512,48 @@ class PlayState extends MusicBeatState
 		add(noteGroup);
 
 		Conductor.songPosition = -Conductor.crochet * 5 + Conductor.offset;
+
+		var sarkiamk = Paths.formatToSongPath(SONG.song);
+		var buffer;
+		var isAdded:Bool = true;
+		var songParentFolder:String = "";
+		if (storyDifficultyText == "erect" || storyDifficultyText == "nightmare") {
+			songParentFolder = "erect/";
+		}
+
+		#if sys
+		if(FileSystem.exists(Paths.getPath('$sarkiamk/'+songParentFolder+'Voices-Player.ogg',SOUND,"songs"))) {
+			buffer = AudioBuffer.fromFile(Paths.getPath('$sarkiamk/'+songParentFolder+'Voices-Player.ogg',SOUND,"songs"));
+		} else if (FileSystem.exists(Paths.getPath('$sarkiamk/'+songParentFolder+'Voices.ogg',SOUND,"songs"))) {
+			buffer = AudioBuffer.fromFile(Paths.getPath('$sarkiamk/'+songParentFolder+'Voices.ogg',SOUND,"songs"));
+		}
+		else {
+			isAdded = false;
+			buffer = null;
+		}
+		#else
+		if(OpenFlAssets.exists(Paths.getPath('$sarkiamk/'+songParentFolder+'Voices-Player.ogg',SOUND,"songs"), SOUND)) {
+			buffer = AudioBuffer.fromFile(Paths.getPath('$sarkiamk/'+songParentFolder+'Voices-Player.ogg',SOUND,"songs"));
+		} else if (OpenFlAssets.exists(Paths.getPath('$sarkiamk/'+songParentFolder+'Voices-Player.ogg',SOUND,"songs"), SOUND)) {
+			buffer = AudioBuffer.fromFile(Paths.getPath('$sarkiamk/'+songParentFolder+'Voices.ogg',SOUND,"songs"));
+		}
+		else {
+			isAdded = false;
+			buffer = null;
+		}
+		#end
+		
+		waveformSprite = new Waveform(140, 80, buffer, 200, 75);
+		waveformSprite.angle = 270;
+		waveformSprite.screenCenter(X);
+		waveformSprite.offset.x = 55;
+		waveformSprite.origin.set();
+		waveformSprite.scale.set(0.35, 4);
+		waveformSprite.cameras = [camHUD];
+		if(ClientPrefs.data.downScroll) waveformSprite.y = 710;
+
+		buffer = AudioBuffer.fromFile(Paths.getPath('$sarkiamk/Voices-Player.ogg',SOUND,"songs"));
+
 		var showTime:Bool = (ClientPrefs.data.timeBarType != 'Disabled');
 		timeTxt = new FlxText(STRUM_X + (FlxG.width / 2) - 248, 19, 400, "", 32);
 		timeTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
@@ -513,6 +569,9 @@ class PlayState extends MusicBeatState
 		timeBar.screenCenter(X);
 		timeBar.alpha = 0;
 		timeBar.visible = showTime;
+		if (isAdded == true) {
+		uiGroup.add(waveformSprite);
+		}
 		uiGroup.add(timeBar);
 		uiGroup.add(timeTxt);
 
@@ -1842,6 +1901,10 @@ class PlayState extends MusicBeatState
 		updateIconsScale(elapsed);
 		updateIconsPosition();
 
+		waveformSprite.generateFlixel(Conductor.songPosition - 200, Conductor.songPosition);
+
+		if (vocals != null) waveformSprite.scale.x = 0.25 * vocals.volume;
+
 		if (startedCountdown && !paused)
 		{
 			Conductor.songPosition += elapsed * 1000 * playbackRate;
@@ -1853,6 +1916,10 @@ class PlayState extends MusicBeatState
 					Conductor.songPosition = Conductor.songPosition + 1000 * FlxMath.signOf(timeDiff);
 			}
 		}
+
+		scoreTxt.color = FlxColor.fromRGB(dad.healthColorArray[0], dad.healthColorArray[1], dad.healthColorArray[2]);
+		botplayTxt.color = FlxColor.fromRGB(dad.healthColorArray[0], dad.healthColorArray[1], dad.healthColorArray[2]);
+		waveformSprite.color = FlxColor.fromRGB(dad.healthColorArray[0], dad.healthColorArray[1], dad.healthColorArray[2]);
 
 		if (startingSong)
 		{
@@ -3129,7 +3196,9 @@ class PlayState extends MusicBeatState
 		strumPlayAnim(true, Std.int(Math.abs(note.noteData)), Conductor.stepCrochet * 1.25 / 1000 / playbackRate);
 		note.hitByOpponent = true;
 
+		if (ignoreOpponentStrumAnimations == false) {
 		spawnHoldSplashOnNote(note);
+		}
 		
 		stagesFunc(function(stage:BaseStage) stage.opponentNoteHit(note));
 		var result:Dynamic = callOnLuas('opponentNoteHit', [notes.members.indexOf(note), Math.abs(note.noteData), note.noteType, note.isSustainNote]);
@@ -3623,9 +3692,12 @@ class PlayState extends MusicBeatState
 			spr = playerStrums.members[id];
 		}
 
+		
+		if (ignoreOpponentStrumAnimations == false) {
 		if(spr != null) {
 			spr.playAnim('confirm', true);
 			spr.resetAnim = time;
+		}
 		}
 	}
 

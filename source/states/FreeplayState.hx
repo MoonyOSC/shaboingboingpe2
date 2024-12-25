@@ -628,6 +628,7 @@ class FreeplayState extends MusicBeatState
 		}
 		else if (controls.ACCEPT && !player.playingMusic)
 			{
+				// MusicBeatState.coolerTransition = true;
 				persistentUpdate = false;
 				var songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
 				var poop:String = Highscore.formatSong(songLowercase, curDifficulty);
@@ -663,7 +664,11 @@ class FreeplayState extends MusicBeatState
 				if (FlxG.save.data.isTransition == false) {
 					MusicBeatState.switchState(new PlayState());
 				} else {
-					LoadingState.loadAndSwitchState(new PlayState());
+					if (FlxG.save.data.TransitionType == "Sticker") {
+						MusicBeatState.switchState(new PlayState());
+					} else {
+						LoadingState.loadAndSwitchState(new PlayState());
+					}
 				}
 				#if !SHOW_LOADING_SCREEN FlxG.sound.music.stop(); #end
 				stopMusicPlay = true;

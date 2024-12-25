@@ -6,13 +6,16 @@ import backend.StageData;
 class OptionsState extends MusicBeatState
 {
 	var options:Array<String> = [
+		#if GAMEJOLT_ALLOWED
+		'Gamejolt', 
+		#end
 		'Note Colors',
 		'Controls',
 		'Adjust Delay and Combo',
 		'Graphics',
 		'Visuals',
-		'Gameplay'
-		#if TRANSLATIONS_ALLOWED , 'Language' #end
+		'Gameplay',
+		#if TRANSLATIONS_ALLOWED 'Language' #end
 	];
 	private var grpOptions:FlxTypedGroup<Alphabet>;
 	private static var curSelected:Int = 0;
@@ -36,6 +39,8 @@ class OptionsState extends MusicBeatState
 				MusicBeatState.switchState(new options.NoteOffsetState());
 			case 'Language':
 				openSubState(new options.LanguageSubState());
+			case 'Gamejolt':
+				MusicBeatState.switchState(new states.GameJoltState());
 		}
 	}
 

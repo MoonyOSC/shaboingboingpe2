@@ -13,6 +13,7 @@ import flixel.FlxObject;
 import flixel.FlxState;
 import lime.system.Clipboard;
 import states.editors.content.PsychJsonPrinter;
+import flixel.util.FlxSpriteUtil;
 
 
 #if (!flash && sys)

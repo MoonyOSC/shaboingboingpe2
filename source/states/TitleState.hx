@@ -26,6 +26,8 @@ import states.MainMenuState;
 import crowplexus.iris.Iris;
 import psychlua.HScript;
 
+import hxgamejolt.GameJolt;
+
 typedef MainConf = {
 	var Transition:Bool;
 	var TransitionType:String;
@@ -83,6 +85,9 @@ class TitleState extends MusicBeatState
 
 	var wackyImage:FlxSprite;
 
+	var gameJoltGameID = "949510";
+	var privateKey = "a312bb89e09805ebc0fac1069bcc40c4";
+
 	#if TITLE_SCREEN_EASTER_EGG
 	final easterEggKeys:Array<String> = [
 		'SHADOW', 'RIVEREN', 'BBPANZU', 'PESSY'
@@ -94,6 +99,10 @@ class TitleState extends MusicBeatState
 	var mustUpdate:Bool = false;
 
 	public static var updateVersion:String = '';
+
+	var playerName:String;
+	var playerKey:String;
+	var autoLogin:Bool = false;
 
 
 
@@ -144,7 +153,62 @@ class TitleState extends MusicBeatState
 
 
 
+	#if GAMEJOLT_ALLOWED
+	function isGameJolt() {
+		trace(ClientPrefs.data.gameJoltUsername);
+		trace(ClientPrefs.data.gameJoltToken);
+		GameJolt.init(gameJoltGameID, privateKey);
 
+		if (ClientPrefs.data.gameJoltUsername == "") {
+			autoLogin = false;
+		} else if (ClientPrefs.data.gameJoltToken == "") {
+			autoLogin = false;
+		} else {
+			autoLogin = true;
+		}
+
+		if (autoLogin == true) {
+			playerName = ClientPrefs.data.gameJoltUsername;
+			playerKey = ClientPrefs.data.gameJoltToken;
+			
+			GameJolt.authUser(playerName, playerKey, {
+			onSucceed: function(json:Dynamic):Void
+			{
+				trace("Game JOLT Hesabınız başarılı bir şekilde bağlandı.");
+			},
+			onFail: function(message:String):Void
+			{
+				ClientPrefs.data.gameJoltUsername = "";
+				ClientPrefs.data.gameJoltToken = "";
+				ClientPrefs.saveSettings();
+				trace("Game Jolt Hesabı bulunamadı.");
+			}
+			});
+
+			GameJolt.fetchUser(playerName, [], {
+			onSucceed: function(json:Dynamic):Void
+			{
+				FlxG.save.data.userJson = json;
+				trace("Game JOLT Hesabınızın verileri başarılı bir şekilde aktarıldı.");
+			},
+			onFail: function(message:String):Void
+			{
+				ClientPrefs.data.gameJoltUsername = "";
+				ClientPrefs.data.gameJoltToken = "";
+				ClientPrefs.saveSettings();
+				trace("Game Jolt Hesabı bulunamadı.");
+			}
+			});
+		} else {
+			trace(ClientPrefs.data);
+			if (ClientPrefs.data.skipGameJoltScreen == false) {
+				MusicBeatState.switchState(new GameJoltState());
+			}
+		}
+
+	}
+
+	#end
 
 
 	override public function create():Void
@@ -161,8 +225,14 @@ class TitleState extends MusicBeatState
 			Language.reloadPhrases();
 		}
 
-		curWacky = FlxG.random.getObject(getIntroTextShit());
+		ClientPrefs.saveSettings();
 
+		curWacky = FlxG.random.getObject(getIntroTextShit());
+		
+		#if GAMEJOLT_ALLOWED
+			isGameJolt();
+		#end
+ 
 		#if CHECK_FOR_UPDATES
 		if(ClientPrefs.data.checkForUpdates && !closedState) {
 			trace('checking for update');

@@ -10,6 +10,8 @@ import lime.app.Application;
 import options.OptionsState;
 import psychlua.HScript;
 import states.editors.MasterEditorMenu;
+import backend.Song;
+import backend.Highscore;
 
 enum MainMenuColumn {
 	LEFT;
@@ -42,11 +44,13 @@ class MainMenuState extends MusicBeatState
 	private var luaDebugGroup:FlxTypedGroup<psychlua.DebugLuaText>;
 	#end
 
+	var menuItemsBack:FlxTypedGroup<FlxSprite>;
 	var menuItems:FlxTypedGroup<FlxSprite>;
 	var leftItem:FlxSprite;
 	var rightItem:FlxSprite;
 	var offsetN:Float = 0;
 	var panel:FlxSprite;
+	var menuX:Float = 140;
 
 	//Centered/Text options
 	var optionShit:Array<String> = [
@@ -65,6 +69,9 @@ class MainMenuState extends MusicBeatState
 	var menuItemsSprite:Array<Dynamic> = [];
 	var disableLeftRightMenu:Bool = false;
 	var hybridEngineMenu:Bool = true;
+	var gameJoltButton:FlxSprite;
+	var disableKeyboard:Bool = false;
+	var cancelLoad:Bool = false;
 
 	function loadJsonData()
 	{
@@ -163,6 +170,13 @@ class MainMenuState extends MusicBeatState
 				];
 				allowMouse = false;
 				disableLeftRightMenu = true;
+
+				// gameJoltButton = new FlxSprite();
+				// gameJoltButton.loadGraphic(Paths.image("login/gamejolt"));
+				// gameJoltButton.scrollFactor.set();
+				// gameJoltButton.x = 1150;
+				// gameJoltButton.scale.set(0.5,0.5);
+				// add(gameJoltButton);
 			}
 
 		persistentUpdate = persistentDraw = true;
@@ -214,6 +228,10 @@ class MainMenuState extends MusicBeatState
 
 		loadJsonData();
 
+		menuItemsBack = new FlxTypedGroup<FlxSprite>();
+		add(menuItemsBack);
+		callOnHScript("onLoad",["menuItemsBack",menuItemsBack]);
+
 		menuItems = new FlxTypedGroup<FlxSprite>();
 		add(menuItems);
 		callOnHScript("onLoad",["menuItems",menuItems]);
@@ -238,7 +256,7 @@ class MainMenuState extends MusicBeatState
 	
 
 			} else {
-				var item:FlxSprite = createMenuItem(option, 0, (num * 140) + 90);
+				var item:FlxSprite = createMenuItem(option, 0, (num * menuX) + 90);
 				item.y += (4 - optionShit.length) * 70; // Offsets for when you have anything other than 4 items
 				item.screenCenter(X);
 				menuItemsSprite.push(item);
@@ -326,11 +344,13 @@ class MainMenuState extends MusicBeatState
 
 		if (!selectedSomethin)
 		{
-			if (controls.UI_UP_P)
-				changeItem(-1);
-
-			if (controls.UI_DOWN_P)
-				changeItem(1);
+			if (disableKeyboard == false) {
+				if (controls.UI_UP_P)
+					changeItem(-1);
+	
+				if (controls.UI_DOWN_P)
+					changeItem(1);
+			}
 
 			var allowMouse:Bool = allowMouse;
 			if (allowMouse && ((FlxG.mouse.deltaScreenX != 0 && FlxG.mouse.deltaScreenY != 0) || FlxG.mouse.justPressed)) //FlxG.mouse.deltaScreenX/Y checks is more accurate than FlxG.mouse.justMoved
@@ -484,34 +504,39 @@ class MainMenuState extends MusicBeatState
 
 					FlxFlicker.flicker(item, 1, 0.06, false, false, function(flick:FlxFlicker)
 					{
-						switch (option)
-						{
-							case 'story_mode':
-								MusicBeatState.switchState(new StoryMenuState());
-							case 'freeplay':
-								MusicBeatState.switchState(new FreeplayState());
-
-							#if MODS_ALLOWED
-							case 'mods':
-								MusicBeatState.switchState(new ModsMenuState());
-							#end
-
-							#if ACHIEVEMENTS_ALLOWED
-							case 'achievements':
-								MusicBeatState.switchState(new AchievementsMenuState());
-							#end
-
-							case 'credits':
-								MusicBeatState.switchState(new CreditsState());
-							case 'options':
-								MusicBeatState.switchState(new OptionsState());
-								OptionsState.onPlayState = false;
-								if (PlayState.SONG != null)
-								{
-									PlayState.SONG.arrowSkin = null;
-									PlayState.SONG.splashSkin = null;
-									PlayState.stageUI = 'normal';
-								}
+						callOnHScript("onStart",[option]);
+						if (cancelLoad == false) {
+							switch (option)
+							{
+								case 'story_mode':
+									MusicBeatState.switchState(new StoryMenuState());
+								case 'freeplay':
+									MusicBeatState.switchState(new FreeplayState());
+	
+								#if MODS_ALLOWED
+								case 'mods':
+									MusicBeatState.switchState(new ModsMenuState());
+								#end
+	
+								#if ACHIEVEMENTS_ALLOWED
+								case 'achievements':
+									MusicBeatState.switchState(new AchievementsMenuState());
+								#end
+	
+								case 'credits':
+									MusicBeatState.switchState(new CreditsState());
+								case 'options':
+									MusicBeatState.switchState(new OptionsState());
+									OptionsState.onPlayState = false;
+									if (PlayState.SONG != null)
+									{
+										PlayState.SONG.arrowSkin = null;
+										PlayState.SONG.splashSkin = null;
+										PlayState.stageUI = 'normal';
+									}
+							}
+						} else {
+							
 						}
 					});
 					
@@ -542,6 +567,52 @@ class MainMenuState extends MusicBeatState
 	}
 		super.update(elapsed);
 		callOnHScript("onUpdatePost",[elapsed]);
+	}
+
+	function triggerEvent(eventName:String,eventValue:Dynamic = 1,eventValue2:Dynamic = 1) {
+		switch (eventName) {
+			case "ChangeState" :
+				if (eventValue == "storymode") {
+					MusicBeatState.switchState(new StoryMenuState());
+				}
+				if (eventValue == "freeplay") {
+					MusicBeatState.switchState(new FreeplayState());
+				}
+				if (eventValue == "credits") {
+					MusicBeatState.switchState(new CreditsState());
+				}
+				if (eventValue == "options") {
+					MusicBeatState.switchState(new OptionsState());
+				}
+				if (eventValue == "achievement") {
+					MusicBeatState.switchState(new AchievementsMenuState());
+				}
+				if (eventValue == "mods") {
+					MusicBeatState.switchState(new ModsMenuState());
+				}
+			case "LoadSong" :
+				var songLowercase:String = Paths.formatToSongPath(eventValue);
+				var poop:String = Highscore.formatSong(songLowercase, eventValue2);
+	
+				try
+				{
+					Song.loadFromJson(poop, songLowercase);
+					PlayState.isStoryMode = false;
+					PlayState.storyDifficulty = eventValue2;
+				}
+
+				if (FlxG.save.data.isTransition == false) {
+					MusicBeatState.switchState(new PlayState());
+				} else {
+					if (FlxG.save.data.TransitionType == "Sticker") {
+						MusicBeatState.switchState(new PlayState());
+					} else {
+						LoadingState.loadAndSwitchState(new PlayState());
+					}
+				}
+			default :
+				trace("Null Value");
+		}
 	}
 
 	function changeItem(change:Int = 0)
