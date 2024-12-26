@@ -214,7 +214,7 @@ class Paths
 
 			if (bitmap == null)
 			{
-				trace('oh no its returning null NOOOO ($file)');
+				trace('File is returning null -> ($file)');
 				return null;
 			}
 		}
@@ -279,7 +279,7 @@ class Paths
 				return true;
 		}
 		#end
-		trace(getPath(key, type, parentFolder, false));
+		trace(getPath("File exists: " + key, type, parentFolder, false));
 		return (OpenFlAssets.exists(getPath(key, type, parentFolder, false)));
 	}
 
