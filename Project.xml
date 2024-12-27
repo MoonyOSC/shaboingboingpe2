@@ -31,6 +31,7 @@
 
 	<define name="SHOW_LOADING_SCREEN" />
 	<define name="PSYCH_WATERMARKS" /> <!-- DELETE THIS TO REMOVE THE PSYCH LOGO FROM LOADING SCREEN -->
+	<define name="BASE_GAME_FILES" />
 
 	<section if="officialBuild">
 		<define name="BASE_GAME_FILES" />
@@ -102,6 +103,7 @@
 		<assets path='example_mods' rename='mods' embed='false' type='template' unless="mac" />
 		<assets path='example_mods' rename='mods' embed='false' if="mac" />
 	</section>
+	<assets path='lua' embed='false' type='template' unless="mac" />
 	<assets path='art/readme.txt' rename='do NOT readme.txt' />
 	<assets path='list.txt' rename='modsList.txt' />
 
@@ -125,7 +127,7 @@
 	<haxelib name="hxdiscord_rpc" version="1.2.4" if="DISCORD_ALLOWED" />
 	<haxelib name="flxanimate" />
 
-	<haxelib name="hxCodec" if="VIDEOS_ALLOWED" />
+	<haxelib name="hxvlc" if="VIDEOS_ALLOWED" />
 
 	<!-- Disable Discord IO Thread -->
 	<haxedef name="DISCORD_DISABLE_IO_THREAD" if="hxdiscord_rpc" />

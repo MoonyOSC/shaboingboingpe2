@@ -5,6 +5,8 @@
 		["Monster", "monster", [34, 51, 68]]
 	],
 
+	"difficulties": "easy,normal,hard,erect,nightmare",
+
 	"weekCharacters": [
 		"spooky",
 		"bf",

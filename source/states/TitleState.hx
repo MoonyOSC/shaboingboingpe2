@@ -517,12 +517,6 @@ class TitleState extends MusicBeatState
 					} else if (titleJSON.StartType == "Song") {
 						trace("Song");
 						trace(titleJSON);
-						// FlxG.save.data.menuSong = true;
-						// trace(Main.isFirst);
-						// if (Main.isFirst == true) {
-						// 	Main.skipModsScreen = false;
-						// 	Main.isFirst = false;
-						// }
 						FlxG.save.data.menuSong = true;
 						if (FlxG.save.data.isFirst == true) {
 							FlxG.save.data.isFirst = false;

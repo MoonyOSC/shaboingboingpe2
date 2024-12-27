@@ -1,0 +1,47 @@
+local lights = {
+	{"FFFFFF","0.39280048843116,0.2046151494395,0.43796646260436,0.090357945397706,0.33411672747388,0.47302947079174,1,0.73653302010557,0.6356448902077,0.6352469767555,0.64044138950976,1,278.68472923389,15.698450558133"},
+	{"FF214D","0.5789272832852,0.2046151494395,0.43796646260436,0.12959141116596,0.20600856969316,0,0.18164713866207,0.58166280890158,0.43584985631081,0,0,1,278.68472923389,15.698450558133"}, -- red
+	{"3C77FF","0.22892926562026,0.2046151494395,0.43796646260436,0.12959141116596,0.17406291116366,0,0.31964580918274,0.58640914589346,0.19296876883268,0.36430871414707,0.67365766110391,1,278.68472923389,15.698450558133"}, -- blue
+	{"DF3CFF","0.22892926562026,0.2046151494395,0.43796646260436,0.12959141116596,0.43082772827808,0,0.55774308677681,0.58640914589346,0.58806468479762,0.36430871414707,0.67365766110391,1,278.68472923389,15.698450558133"}, -- purple
+	{"FFCC3C","1,1,0.34653136658137,0,0.23925481774519,0,0,0.61004367391578,0.58322625727347,0.50233373671696,0,0.5782003677894,280.34541616198,19.702368975269"}, -- yello
+	{"47E8A2","0,0.18890908861763,0,0.12676066751505,0,0.23152006658076,0.012989151036336,0.58697983072797,0,0.56746073350748,0.10719831585735,0.5782003677894,280.34541616198,19.702368975269"} -- green
+}
+
+function changeColor()
+	local random = getRandomInt(1,#lights)
+	triggerEvent("Set RTX Data",lights[random][2])
+	doTweenColor("light", "light", lights[random][1], 0.05, "circOut")
+end
+
+function onCreatePost()
+	changeColor()
+end
+
+function onBeatHit()
+	if curBeat % 4 == 0 then
+		changeColor()
+	end
+end
+
+function onCreate()
+	makeLuaSprite('sky','stages-erects/week3/sky2', -100, 00);
+	setLuaSpriteScrollFactor('sky', 0.1, 0.1);
+	
+	makeLuaSprite('city','stages-erects/week3/city2', -10, 0);
+	setLuaSpriteScrollFactor('city', 0.3, 0.3);
+	scaleObject('city', 0.85, 0.85);
+	makeAnimatedLuaSprite('light', 'stages-erects/week3/light',-10, 0);
+	setLuaSpriteScrollFactor('light', 0.3, 0.3);		
+	scaleObject('light',0.85, 0.85);
+	makeLuaSprite('behindTrain','stages-erects/philly2/behindTrain2', -40, 50);
+	makeLuaSprite('street','stages-erects/week3/street2', -40, 50);
+
+	addLuaSprite('sky', false);
+	addLuaSprite('city', false);
+	addLuaSprite('light', false);
+	addLuaSprite('behindTrain', false);
+	addLuaSprite('street', false);
+	
+	
+
+end

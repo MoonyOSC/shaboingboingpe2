@@ -1,0 +1,41 @@
+{
+	"player1": "bf",
+	"gfVersion": "gf",
+	"notes": [
+		{
+			"sectionBeats": 4,
+			"sectionNotes": [
+				[0, 5, 0],
+				[240, 4, 0],
+				[240, 6, 0],
+				[480, 7, 0],
+				[720, 2, 0],
+				[840, 1, 0],
+				[840, 7, 0],
+				[840, 5, 0],
+				[960, 2, 0],
+				[1080, 0, 0],
+				[1080, 4, 0],
+				[1200, 1, 0],
+				[1200, 5, 0],
+				[1440, 6, 0],
+				[1440, 5, 0],
+				[1680, 2, 0],
+				[1800, 3, 0]
+			],
+			"mustHitSection": false
+		}
+	],
+	"events": [],
+	"player2": "dad",
+	"offset": 0,
+	"charter": "fabs",
+	"song": "Fresh",
+	"needsVoices": true,
+	"generatedBy": "Psych Engine v0.1 - Chart Editor V-Slice Importer",
+	"stage": "stage-erect",
+	"bpm": 125,
+	"format": "psych_v1_convert",
+	"speed": 2.3,
+	"artist": "Kohta Takahashi (feat. Saruky)"
+}

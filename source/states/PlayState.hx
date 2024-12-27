@@ -56,12 +56,7 @@ import psychlua.HScript;
 import crowplexus.iris.Iris;
 #end
 
-#if VIDEOS_ALLOWED
-#if (hxCodec >= "3.0.0") import hxcodec.flixel.FlxVideo as VideoHandler;
-#elseif (hxCodec >= "2.6.1") import hxcodec.VideoHandler as VideoHandler;
-#elseif (hxCodec == "2.6.0") import VideoHandler;
-#else import vlc.MP4Handler as VideoHandler; #end
-#end
+import objects.VideoSprite;
 
 /**
  * This is where all the Gameplay stuff happens and is managed
@@ -955,96 +950,62 @@ class PlayState extends MusicBeatState
 		char.y += char.positionArray[1];
 	}
 
-	// public var videoCutscene:VideoSprite = null;
-	// public function startVideo(name:String, forMidSong:Bool = false, canSkip:Bool = true, loop:Bool = false, playOnLoad:Bool = true)
-	// {
-	// 	#if VIDEOS_ALLOWED
-	// 	inCutscene = true;
-	// 	canPause = false;
-
-	// 	var foundFile:Bool = false;
-	// 	var fileName:String = Paths.video(name);
-
-	// 	#if sys
-	// 	if (FileSystem.exists(fileName))
-	// 	#else
-	// 	if (OpenFlAssets.exists(fileName))
-	// 	#end
-	// 	foundFile = true;
-
-	// 	if (foundFile)
-	// 	{
-	// 		videoCutscene = new VideoSprite(fileName, forMidSong, canSkip, loop);
-
-	// 		// Finish callback
-	// 		if (!forMidSong)
-	// 		{
-	// 			function onVideoEnd()
-	// 			{
-	// 				if (generatedMusic && PlayState.SONG.notes[Std.int(curStep / 16)] != null && !endingSong && !isCameraOnForcedPos)
-	// 				{
-	// 					moveCameraSection();
-	// 					FlxG.camera.snapToTarget();
-	// 				}
-	// 				videoCutscene = null;
-	// 				canPause = false;
-	// 				inCutscene = false;
-	// 				startAndEnd();
-	// 			}
-	// 			videoCutscene.finishCallback = onVideoEnd;
-	// 			videoCutscene.onSkip = onVideoEnd;
-	// 		}
-	// 		add(videoCutscene);
-
-	// 		if (playOnLoad)
-	// 			videoCutscene.videoSprite.play();
-	// 		return videoCutscene;
-	// 	}
-	// 	#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
-	// 	else addTextToDebug("Video not found: " + fileName, FlxColor.RED);
-	// 	#else
-	// 	else FlxG.log.error("Video not found: " + fileName);
-	// 	#end
-	// 	#else
-	// 	FlxG.log.warn('Platform not supported!');
-	// 	startAndEnd();
-	// 	#end
-	// 	return null;
-	// }
-
-
 	
-	public function startVideo(name:String,?tag:String = "none")
+	public var videoCutscene:VideoSprite = null;
+	public function startVideo(name:String, forMidSong:Bool = false, canSkip:Bool = true, loop:Bool = false, playOnLoad:Bool = true)
 	{
 		#if VIDEOS_ALLOWED
 		inCutscene = true;
+		canPause = false;
 
-		var filepath:String = Paths.video(name);
+		var foundFile:Bool = false;
+		var fileName:String = Paths.video(name);
+
 		#if sys
-		if(!FileSystem.exists(filepath))
+		if (FileSystem.exists(fileName))
 		#else
-		if(!OpenFlAssets.exists(filepath))
+		if (OpenFlAssets.exists(fileName))
 		#end
-		{
-			FlxG.log.warn('Couldnt find video file: ' + name);
-			startAndEnd();
-			return;
-		}
+		foundFile = true;
 
-		var video:VideoHandler = new VideoHandler();
-			// Recent versions
-			video.play(filepath);
-			video.onEndReached.add(function()
+		if (foundFile)
+		{
+			videoCutscene = new VideoSprite(fileName, forMidSong, canSkip, loop);
+
+			// Finish callback
+			if (!forMidSong)
 			{
-				video.dispose();
-				startAndEnd();
-				return;
-			}, true);
+				function onVideoEnd()
+				{
+					if (generatedMusic && PlayState.SONG.notes[Std.int(curStep / 16)] != null && !endingSong && !isCameraOnForcedPos)
+					{
+						moveCameraSection();
+						FlxG.camera.snapToTarget();
+					}
+					videoCutscene = null;
+					canPause = false;
+					inCutscene = false;
+					startAndEnd();
+				}
+				videoCutscene.finishCallback = onVideoEnd;
+				videoCutscene.onSkip = onVideoEnd;
+			}
+			add(videoCutscene);
+
+			if (playOnLoad)
+				videoCutscene.videoSprite.play();
+			return videoCutscene;
+		}
+		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
+		else addTextToDebug("Video not found: " + fileName, FlxColor.RED);
+		#else
+		else FlxG.log.error("Video not found: " + fileName);
+		#end
 		#else
 		FlxG.log.warn('Platform not supported!');
 		startAndEnd();
-		return;
 		#end
+		return null;
 	}
 	
 	function startAndEnd()
@@ -1180,25 +1141,30 @@ class PlayState extends MusicBeatState
 					case 0:
 						FlxG.sound.play(Paths.sound('intro3' + introSoundsSuffix), 0.6);
 						tick = THREE;
-						callOnScripts("onSwagCounter",[tick,null]);
+						callOnHScript("onSwagCounter",[tick,null]);
+						callOnLuas("onSwagCounter",[tick,null]);
 					case 1:
 						countdownReady = createCountdownSprite(introAlts[0], antialias);
 						FlxG.sound.play(Paths.sound('intro2' + introSoundsSuffix), 0.6);
 						tick = TWO;
-						callOnScripts("onSwagCounter",[tick,countdownReady]);
+						callOnHScript("onSwagCounter",[tick,countdownReady]);
+						callOnLuas("onSwagCounter",[tick,"countdownReady"]);
 					case 2:
 						countdownSet = createCountdownSprite(introAlts[1], antialias);
 						FlxG.sound.play(Paths.sound('intro1' + introSoundsSuffix), 0.6);
 						tick = ONE;
-						callOnScripts("onSwagCounter",[tick,countdownSet]);
+						callOnHScript("onSwagCounter",[tick,countdownSet]);
+						callOnLuas("onSwagCounter",[tick,"countdownReady"]);
 					case 3:
 						countdownGo = createCountdownSprite(introAlts[2], antialias);
 						FlxG.sound.play(Paths.sound('introGo' + introSoundsSuffix), 0.6);
 						tick = GO;
-						callOnScripts("onSwagCounter",[tick,countdownGo]);
+						callOnHScript("onSwagCounter",[tick,countdownGo]);
+						callOnLuas("onSwagCounter",[tick,"countdownReady"]);
 					case 4:
 						tick = START;
-						callOnScripts("onSwagCounter",[tick,null]);
+						callOnHScript("onSwagCounter",[tick,null]);
+						callOnLuas("onSwagCounter",[tick,null]);
 				}
 
 				if(!skipArrowStartTween)
@@ -3229,10 +3195,12 @@ class PlayState extends MusicBeatState
 		if (isSus == false && isCoolSus == true){
             var datashit = ['purple', 'blue', 'green', 'red'];
 
-            for (i in 0...note.tail.length){
-                note.tail[i].animation.play(datashit[leData] + "holdconf");
-                if (i == note.tail.length -1) note.tail[i].animation.play(datashit[leData] + "holdendconf");
-            }
+            try {
+				for (i in 0...note.tail.length){
+					note.tail[i].animation.play(datashit[leData] + "holdconf");
+					if (i == note.tail.length -1) note.tail[i].animation.play(datashit[leData] + "holdendconf");
+				}
+			}
         }
 
 		if(!note.hitCausesMiss) //Common notes
@@ -3848,6 +3816,34 @@ class PlayState extends MusicBeatState
 				return true;
 			}
 		}
+
+		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'shaders/'))
+		{
+			var frag:String = folder + name + '.frag';
+			var vert:String = folder + name + '.vert';
+			var found:Bool = false;
+			if(FileSystem.exists(frag))
+			{
+				frag = File.getContent(frag);
+				found = true;
+			}
+			else frag = null;
+
+			if(FileSystem.exists(vert))
+			{
+				vert = File.getContent(vert);
+				found = true;
+			}
+			else vert = null;
+
+			if(found)
+			{
+				runtimeShaders.set(name, [frag, vert]);
+				//trace('Found shader $name!');
+				return true;
+			}
+		}
+
 			#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
 			addTextToDebug('Missing shader $name .frag AND .vert files!', FlxColor.RED);
 			#else

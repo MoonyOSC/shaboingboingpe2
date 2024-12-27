@@ -14,7 +14,7 @@ import openfl.events.Event;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 
-class GameJoltState extends MusicBeatState
+class GameJoltState extends MusicBeatState // This code works, but I want to make it Lua compatible so it is disabled for now.
 {
 	public static var leftState:Bool = false;
 

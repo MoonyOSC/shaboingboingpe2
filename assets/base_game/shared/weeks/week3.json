@@ -5,6 +5,8 @@
 		["Blammed", "pico", [148, 22, 83]]
 	],
 
+	"difficulties": "easy,normal,hard,erect,nightmare",
+
 	"weekCharacters": [
 		"pico",
 		"bf",
